@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  product-service:
+    build: ./productservice 
+    volumes:
+      - ./productservice:/usr/src/app
+    ports:
+      - 9001
+    networks:
+      - front-tier
+      - back-tier
+
+  website:
+    image:  php:apache
+    volumes:
+      - ./website:/var/www/html
+    ports:
+      - 80:80
+    depends_on:
+      - product-service
+    networks:
+      - front-tier
+      - back-tier
+
+  app-lb:
+    image:  dockercloud/haproxy
+    ports:
+      - 80
+    links:
+      - product-service
+    networks:
+      - front-tier
+      - back-tier
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  front-tier:
+    driver: bridge
+  back-tier:
+    driver: bridge
